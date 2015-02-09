@@ -1,0 +1,6 @@
+# Provision local devbox
+
+[default]
+
+[local]
+localhost ansible_connection=local

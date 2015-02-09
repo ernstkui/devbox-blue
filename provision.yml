@@ -1,0 +1,20 @@
+---
+- hosts: local
+
+  tasks:
+
+  # setup directory structure
+  - name: Create var dirs if not available.
+    file: >
+        path=/home/{{ local_user }}/{{ item }}
+        owner={{ local_user }}
+        group={{ local_user }}
+        mode=0755
+        state=directory
+    with_items:
+      - 'code'
+      - 'test'
+
+# setup PPA's
+
+# install packages
