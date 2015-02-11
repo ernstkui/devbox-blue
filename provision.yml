@@ -1,5 +1,6 @@
 ---
 - hosts: local
+  sudo: yes
 
   tasks:
 
@@ -13,8 +14,94 @@
         state=directory
     with_items:
       - 'code'
-      - 'test'
 
-# setup PPA's
 
-# install packages
+  # NOTE: split in ruby-dev, python-dev, common, vagrant roles.
+
+  # Common packages
+  - name: Install common packages
+    apt: pkg={{ item }}
+    with_items:
+      - vim-nox
+      - cmake
+      - rake
+      - ruby-dev
+      - python-dev
+      - git-core
+      - tmux
+      - gedit
+      - chromium-browser
+      - exuberant-ctags
+      - htop
+      - ipython
+      - markdown
+      - cifs-utils
+      - curl
+      - ack-grep
+      - pgadmin3
+      - zsh
+      - autojump
+
+  # Vagrant
+  - name: Get vagrant deb file
+    get_url: url="https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb" dest="/home/arjen/Downloads/vagrant.deb"
+
+  - name: Install Vagrant
+    apt: deb="/home/arjen/Downloads/vagrant.deb"
+
+  - name: Install vagrant lxc dependencies.
+    apt: pkg={{ item }}
+    with_items:
+      - redir
+      - bridge-utils
+      - lxc
+
+  - name: List vagrant plugins
+    command: vagrant plugin list
+    register: vagrant_plugins
+
+  - name: Install Vagrant lxc provider.
+    sudo: no
+    shell: vagrant plugin install vagrant-lxc
+    when: '"vagrant-lxc" not in vagrant_plugins'
+
+  - name: Add lxc base boxes.
+    sudo: no
+    shell: vagrant box add "https://vagrantcloud.com/fgrehm/boxes/"{{ item }}"-lxc"
+    with_items:
+      - precise64
+      - trusty64
+    ignore_errors: yes
+
+  # geospatial
+  - name: Ensure ppa:ubuntugis-unstable/ppa repository key is added
+    apt_key: id=314DF160 url='http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x089EBE08314DF160' 
+
+  - name: Ensure ppa:ubuntugis-unstable/ppa repository is added to the apt sources
+    apt_repository: repo='deb http://ppa.launchpad.net/ubuntugis/ppa/ubuntu-unstable utopic main' state=present
+
+  - name: Ensure ppa:ubuntugis-unstable/ppa source repository is added to the apt sources
+    apt_repository: repo='deb-src http://ppa.launchpad.net/ubuntugis/ubuntugis-unstable/ubuntu utopic main' state=present update_cache=yes
+
+
+  # Geospatial packages
+  - name: Geospatial packges (gdal, qgis, etc)
+    apt: pkg={{ item }}
+    with_items:
+      - gdal-bin
+      - qgis
+
+  - name: Set zsh to default shell.
+    user: name=arjen shell=/bin/zsh
+
+  - name: Python packges
+    pip: name={{ item }}
+    with_items:
+      - virtualenvwrapper
+
+  # Vim plugins
+  #- name: Compile Command-T VIM plugin.
+    #shell: rake make chdir="/home/arjen/.vim/bundle/Command-T/"
+
+  #- name: Compile YouCompleteMe VIM plugin.
+    #shell: ./install.sh chdir="/home/arjen/.vim/bundle/YouCompleteMe/"
