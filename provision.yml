@@ -47,6 +47,7 @@
       - pgadmin3
       - zsh
       - autojump
+      - qt4-qtconfig
 
   # Fonts
   - name: Get powerline fonts.
@@ -55,6 +56,26 @@
     with_items:
       - PowerlineSymbols.otf
       - 10-powerline-symbols.conf
+
+  - name: Get adobe fonts.
+    sudo: no
+    git: repo=https://github.com/adobe-fonts/{{ item }}.git
+         dest={{ download_dir }}fonts/{{ item }}
+         version=release
+    with_items:
+      - source-sans-pro
+      - source-code-pro
+
+  - name: Symlink adobe fonts to valid X font path.
+    sudo: no
+    file: src={{ download_dir }}fonts/{{ item }}
+          dest={{ home_dir }}.fonts/{{ item }}
+          state=link
+          owner=arjen
+          group=arjen
+    with_items:
+      - source-sans-pro
+      - source-code-pro
 
   - name: Symlink symbols to valid X font path.
     sudo: no
@@ -114,7 +135,7 @@
     apt_key: id=314DF160 url='http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x089EBE08314DF160' 
 
   - name: Ensure ppa:ubuntugis-unstable/ppa repository is added to the apt sources
-    apt_repository: repo='deb http://ppa.launchpad.net/ubuntugis/ppa/ubuntu-unstable utopic main' state=present
+    apt_repository: repo='deb http://ppa.launchpad.net/ubuntugis/ubuntugis-unstable/ubuntu utopic main' state=present
 
   - name: Ensure ppa:ubuntugis-unstable/ppa source repository is added to the apt sources
     apt_repository: repo='deb-src http://ppa.launchpad.net/ubuntugis/ubuntugis-unstable/ubuntu utopic main' state=present update_cache=yes
