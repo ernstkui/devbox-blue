@@ -1,6 +1,9 @@
 ---
 - hosts: local
   sudo: yes
+  vars:
+    home_dir: "/home/arjen/"
+    download_dir: "{{ home_dir }}Downloads/"
 
   tasks:
 
@@ -14,6 +17,9 @@
         state=directory
     with_items:
       - 'code'
+      - 'Downloads/fonts'
+      - '.fonts'
+      - '.config/fontconfig/conf.d'
 
 
   # NOTE: split in ruby-dev, python-dev, common, vagrant roles.
@@ -42,12 +48,40 @@
       - zsh
       - autojump
 
+  # Fonts
+  - name: Get powerline fonts.
+    sudo: no
+    get_url: url="https://github.com/powerline/powerline/raw/develop/font/{{ item }}" dest="{{ download_dir }}fonts/{{ item }}"
+    with_items:
+      - PowerlineSymbols.otf
+      - 10-powerline-symbols.conf
+
+  - name: Symlink symbols to valid X font path.
+    sudo: no
+    file: src={{ download_dir }}fonts/PowerlineSymbols.otf
+          dest={{ home_dir }}.fonts/PowerLineSymbols.otf
+          state=link
+          owner=arjen
+          group=arjen
+
+  - name: Update font cache.
+    command: fc-cache -vf "{{ home_dir }}.fonts/"
+
+  - name: Symlink fontconfig file.
+    sudo: no
+    file: src={{ download_dir }}fonts/10-powerline-symbols.conf
+          path={{ home_dir }}.config/fontconfig/conf.d/10-powerline-symbols.conf
+          state=link
+          owner=arjen
+          group=arjen
+
   # Vagrant
   - name: Get vagrant deb file
-    get_url: url="https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb" dest="/home/arjen/Downloads/vagrant.deb"
+    sudo: no
+    get_url: url="https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb" dest="{{ download_dir }}vagrant.deb"
 
   - name: Install Vagrant
-    apt: deb="/home/arjen/Downloads/vagrant.deb"
+    apt: deb="{{ download_dir }}vagrant.deb"
 
   - name: Install vagrant lxc dependencies.
     apt: pkg={{ item }}
@@ -55,15 +89,17 @@
       - redir
       - bridge-utils
       - lxc
+      - lxc-templates
+      - cgroup-lite
 
   - name: List vagrant plugins
     command: vagrant plugin list
     register: vagrant_plugins
 
-  - name: Install Vagrant lxc provider.
-    sudo: no
-    shell: vagrant plugin install vagrant-lxc
-    when: '"vagrant-lxc" not in vagrant_plugins'
+  #- name: Install Vagrant lxc provider.
+    #sudo: no
+    #shell: vagrant plugin install vagrant-lxc
+    #when: '"vagrant-lxc" not in vagrant_plugins'
 
   - name: Add lxc base boxes.
     sudo: no
@@ -98,6 +134,7 @@
     pip: name={{ item }}
     with_items:
       - virtualenvwrapper
+      - powerline-status
 
   # Vim plugins
   #- name: Compile Command-T VIM plugin.
@@ -105,3 +142,20 @@
 
   #- name: Compile YouCompleteMe VIM plugin.
     #shell: ./install.sh chdir="/home/arjen/.vim/bundle/YouCompleteMe/"
+
+    # nodejs ppa
+  - name: Ensure ppa:chris-lea/node.js repository key is added
+    apt_key: id=314DF160 url='http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x6B827C12C2D425E227EDCA75089EBE08314DF160' 
+
+  - name: Ensure ppa:chris-lea/node.js to repository is added to the apt sources
+    apt_repository: repo='deb http://ppa.launchpad.net/chris-lea/node.js/ubuntu utopic main' state=present update_cache=yes
+
+  # node-js
+  - name: Make sure nodejs is installed
+    apt: pkg=nodejs force=yes
+
+  - name: Install bower and grunt-cli
+    npm: name={{ item }} global=yes 
+    with_items:
+     - bower
+     - grunt-cli
