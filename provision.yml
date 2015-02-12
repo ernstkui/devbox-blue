@@ -180,3 +180,6 @@
     with_items:
      - bower
      - grunt-cli
+
+  - name: Disable avahi service
+    service: name=avahi-daemon enabled=no state=stopped
