@@ -156,6 +156,7 @@
     with_items:
       - virtualenvwrapper
       - powerline-status
+      - flake8
 
   # Vim plugins
   #- name: Compile Command-T VIM plugin.
