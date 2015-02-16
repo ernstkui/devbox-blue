@@ -20,7 +20,7 @@
       - 'Downloads/fonts'
       - '.fonts'
       - '.config/fontconfig/conf.d'
-
+      - 'bin'
 
   # NOTE: split in ruby-dev, python-dev, common, vagrant roles.
 
