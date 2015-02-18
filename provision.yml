@@ -48,6 +48,7 @@
       - zsh
       - autojump
       - qt4-qtconfig
+      - libreoffice
 
   # Fonts
   - name: Get powerline fonts.
