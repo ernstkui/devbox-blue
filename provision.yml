@@ -42,6 +42,14 @@
       - zsh
       - autojump
 
+  # Sublime
+  - name: Get SublimeText deb file
+    sudo: no
+    get_url: url="http://c758482.r82.cf2.rackcdn.com/sublime-text_build-3080_amd64.deb" dest="{{ download_dir }}sublime.deb"
+
+  - name: Install SublimeText
+    apt: deb="{{ download_dir }}sublime.deb"
+
   # Vagrant
   - name: Get vagrant deb file
     sudo: no
