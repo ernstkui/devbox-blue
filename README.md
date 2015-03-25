@@ -6,4 +6,4 @@
     sudo pip install ansible
     git clone
     cd devbox
-    ansible-playbook -i local deploy.yml
+	ansible-playbook -i local provision.yml -K
